@@ -112,13 +112,13 @@ Expected response:
 
 Complete the TODOs in:
 
-- `rag_service.py`
-- `app.py`
+- `lib/rag_service.py`
+- `lib/app.py`
 
 You should not need to change:
 
-- `company_documents.py`
-- `ai_client.py`
+- `lib/company_documents.py`
+- `lib/ai_client.py`
 - the tests
 
 ## Required Endpoint
