@@ -28,8 +28,45 @@ def create_app():
         7. Return query, answer, and sources as JSON.
         8. If generate_response raises RuntimeError, return a 503 service error.
         """
-        # TODO: Replace this placeholder response with your implementation.
-        return jsonify({"message": "TODO: implement /api/ask"}), 501
+        if not request.is_json:
+            return jsonify({"error": "Request must be JSON"}), 400
+
+        data = request.get_json(silent=True)
+        if data is None:
+            return jsonify({"error": "Invalid or missing JSON data"}), 400
+
+        if "query" not in data:
+            return jsonify({"error": "Missing 'query' field in request"}), 400
+
+        query = data["query"]
+        if not isinstance(query, str):
+            return jsonify({"error": "Field 'query' must be a string"}), 400
+
+        if not query.strip():
+            return jsonify({"error": "Field 'query' cannot be blank"}), 400
+
+        context_matches = retrieve_context(query, COMPANY_DOCUMENTS)
+
+        if not context_matches:
+            return jsonify({
+                "query": query,
+                "answer": "I am sorry, but the approved company documents do not contain enough information to answer your question.",
+                "sources": []
+            }), 200
+
+        prompt = build_prompt(query, context_matches)
+
+        try:
+            answer = generate_response(prompt)
+        except RuntimeError as e:
+            return jsonify({"error": f"Model service error: {str(e)}"}), 503
+
+        sources = [source_metadata(match) for match in context_matches]
+        return jsonify({
+            "query": query,
+            "answer": answer,
+            "sources": sources
+        }), 200
 
     return app
 
